@@ -21,65 +21,19 @@
 </nav>
 
 <div class="container" id="body-content"></div>
-<button class="btn-floating halfway-fab waves-effect waves-light red" onclick="addData()">
+<button class="btn-floating halfway-fab waves-effect waves-light red" onclick="addPokemon()">
     <i class="material-icons">add</i>
 </button>
 
 <script src="js/materialize.min.js"></script>
 <script src="js/api.js"></script>
 <script src="js/idb.js"></script>
+<script src="js/db.js"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         getDetailPokemonByName();
     });
-
-    function addData() {
-        if (!('indexedDB' in window)) {
-            console.log('This browser doesn\\\'t support IndexedDB');
-            return;
-        }
-
-        var dbPromise = idb.open("mydatabase", 1, function(upgradeDb) {
-            console.log('Creating new object store . . . ');
-            if (!upgradeDb.objectStoreNames.contains("pokemons")) {
-                upgradeDb.createObjectStore("pokemons", {keyPath: 'id', autoIncrement: true});
-            }
-            console.log('Object store created!')
-        });
-
-        var urlParams = new URLSearchParams(window.location.search);
-        var nameParam = urlParams.get("name");
-
-        fetch(base_url + "pokemon/" + nameParam)
-            .then(status)
-            .then(json)
-            .then(function (data) {
-                dbPromise.then(function (db) {
-                    if ('PushManager' in window) {
-                        navigator.serviceWorker.getRegistration()
-                            .then(function (reg) {
-                                reg.showNotification(`Pokemon ${data.name} added to your favourite list`);
-                            });
-                    }
-
-                    var tx = db.transaction('pokemons', 'readwrite');
-                    var store = tx.objectStore('pokemons');
-                    var team = {
-                        name: `${data.name}`
-                    };
-                    store.put(team);
-                    return tx.complete;
-                }).then(function () {
-                    window.location.href = "fav-pokemon.html";
-                    console.log('Pokemon successfully added');
-                }).catch(function (error) {
-                    alert('Fail to add pokemon :(');
-                    console.log('Pokemon failed to added');
-                    console.log(error);
-                });
-            });
-    }
 </script>
 </body>
 </html>

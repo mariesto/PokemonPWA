@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
-    
+
     <nav class="teal lighten-3" role="navigation">
         <div class="nav-wrapper container">
           <a href="/" class="brand-logo" id="logo-container">Pokemon App</a>
@@ -22,6 +22,8 @@
           <ul class="topnav right hide-on-med-and-down"></ul>
         </div>
     </nav>
+
+    <h3 class="center-align">Welcome</h3>
 
     <div class="container" id="body-content">
         <div class="row">
@@ -52,6 +54,26 @@
         document.addEventListener("DOMContentLoaded", function () {
             getAllPokemon();
         });
+
+        if ("Notification" in window) {
+            requestPermission();
+        } else {
+            console.error("Browser not support notification.");
+        }
+
+        function requestPermission() {
+            Notification.requestPermission().then(function (result) {
+                if (result === "denied") {
+                    console.log("Notification feature not allowed.");
+                    return;
+                } else if (result === "default") {
+                    console.error("User already close the permission dialog.");
+                    return;
+                }
+
+                console.log("Notification feature allowed");
+            });
+        }
     </script>
 </body>
 </html>
