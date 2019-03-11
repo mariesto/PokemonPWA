@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="manifest" href="./manifest.json">
+    <meta charset="UTF-8">
+    <meta name="theme-color" content="#00897B"/>
+    <title>Pokemon PWA</title>
+    <meta name="description" content="Pokemon PWA" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+
+<nav class="teal lighten-3" role="navigation">
+    <div class="nav-wrapper container">
+        <a href="#" class="brand-logo" id="logo-container">Pokemon App</a>
+        <a href="#" class="sidenav-trigger" data-target="nav-mobile">&#9776;</a>
+
+        <ul class="topnav right hide-on-med-and-down"></ul>
+        <ul class="sidenav" id="nav-mobile"></ul>
+    </div>
+</nav>
+
+<div class="container" id="body-content"></div>
+
+<script src="js/materialize.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/idb.js"></script>
+
+<script>
+    var dbPromise = idb.open("mydatabase", 1, function(upgradeDb) {
+        console.log('Creating new object store . . . ');
+        if (!upgradeDb.objectStoreNames.contains("pokemons")) {
+            upgradeDb.createObjectStore("pokemons", {keyPath: 'id', autoIncrement: true});
+        }
+        console.log('Object store created!')
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        getAllFavPokemon();
+    });
+
+    function getAllFavPokemon() {
+        dbPromise.then(function (db) {
+            var tx = db.transaction('pokemons', 'readonly');
+            var store = tx.objectStore('pokemons');
+
+            return store.getAll();
+        }).then(function (pokemons) {
+            console.log('Data successfully fetch : ', pokemons);
+
+            var favouriteHTML = "";
+
+            if (pokemons == 0){
+                favouriteHTML += `
+                    <p class="center-align">You don't have any favourite pokemon :(</p>
+                `;
+
+                document.getElementById('body-content').innerHTML = favouriteHTML;
+            }else{
+                pokemons.forEach(function (pokemon) {
+                    favouriteHTML += `
+                    <ul class="collection with-header">
+                      <li class="collection-item">
+                        <div>
+                            ${pokemon.name}
+                            <a href="#" onclick='deletePokemon(${pokemon.id})'>
+                                <i class="material-icons right">delete</i>
+                            </a>
+                        </div>
+                      </li>
+                    </ul>
+                    `
+                });
+
+                document.getElementById('body-content').innerHTML = favouriteHTML;
+            }
+        }).catch(function () {
+            console.log('Data fail to fetch');
+        });
+    }
+
+    function deletePokemon(id) {
+
+        dbPromise.then(function (db) {
+            if ('PushManager' in window) {
+                navigator.serviceWorker.getRegistration()
+                    .then(function (reg) {
+                        reg.showNotification(`Pokemon successfully removed`);
+                    });
+            }
+
+            var tx = db.transaction('pokemons', 'readwrite');
+            var store = tx.objectStore('pokemons');
+            store.delete(id);
+            return tx.complete;
+        }).then(function () {
+            window.location.href = "index.html";
+            console.log('Pokemon deleted');
+        }).catch(function (error) {
+            alert('Fail to add team :(');
+            console.log(error);
+        });
+    }
+</script>
+</body>
+</html>
